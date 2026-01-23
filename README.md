@@ -8,9 +8,22 @@ clojure/jar → clj-pack → single binary (runs anywhere)
 
 ## Why?
 
-Deploying Clojure apps usually means shipping a JAR and requiring a JVM on the target machine. `clj-pack` eliminates that dependency by bundling a minimal JVM runtime (via `jlink`) with your uberjar into a single executable.
+Deploying Clojure apps usually means shipping a JAR and requiring a JVM on the target machine. The common solution is GraalVM native-image, but it brings its own set of problems: long compilation times, reflection configuration headaches, incompatible libraries, and a complex toolchain.
 
-The result: one file, zero runtime dependencies, instant startup on second run.
+`clj-pack` is a practical alternative. It bundles a minimal JVM runtime (via `jlink`) with your uberjar into a single executable — zero external dependencies, everything included in the binary. No GraalVM setup, no reflection configs, no library compatibility issues. Your app runs exactly as it does in development.
+
+The result: one file, zero runtime dependencies, full JVM compatibility, instant startup on second run.
+
+### clj-pack vs GraalVM native-image
+
+| | clj-pack | GraalVM native-image |
+|---|---|---|
+| Compatibility | 100% JVM compatible | Requires reflection config, some libs unsupported |
+| Build time | Fast (jlink + packaging) | Slow (ahead-of-time compilation) |
+| Binary size | ~30-50 MB | ~20-40 MB |
+| First run | Extracts once, cached | Instant |
+| Setup | Just `clj-pack` | GraalVM + native-image + config |
+| Debugging | Standard JVM tooling | Limited |
 
 ## Quick Start
 
@@ -132,7 +145,6 @@ src/
 ### Ideas for contribution
 
 - Windows support
-- GraalVM native-image as alternative backend
 - Custom `jlink` module list override
 - Compression options (zstd, xz)
 - CI/CD integration examples
