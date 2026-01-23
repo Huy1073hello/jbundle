@@ -1,0 +1,143 @@
+# clj-pack
+
+Package Clojure applications into self-contained binaries. No JVM installation required to run the output.
+
+```
+clojure/jar → clj-pack → single binary (runs anywhere)
+```
+
+## Why?
+
+Deploying Clojure apps usually means shipping a JAR and requiring a JVM on the target machine. `clj-pack` eliminates that dependency by bundling a minimal JVM runtime (via `jlink`) with your uberjar into a single executable.
+
+The result: one file, zero runtime dependencies, instant startup on second run.
+
+## Quick Start
+
+```sh
+# Build from a Clojure project
+clj-pack build --input ./my-project --output ./dist/my-app
+
+# Build from a pre-built JAR
+clj-pack build --input ./target/app.jar --output ./dist/my-app
+
+# Run it — no Java needed on the system
+./dist/my-app
+```
+
+## How It Works
+
+```
+┌──────────────────────────────────────────────────────┐
+│  1. Detect build system (deps.edn or project.clj)    │
+│  2. Compile uberjar (clojure -T:build / lein)        │
+│  3. Download JDK from Adoptium (cached locally)      │
+│  4. Detect modules with jdeps                        │
+│  5. Create minimal runtime with jlink (~30-50 MB)    │
+│  6. Pack runtime + JAR into self-contained binary    │
+└──────────────────────────────────────────────────────┘
+```
+
+The generated binary is a shell stub + tar.gz payload. On first execution it extracts to `~/.clj-pack/cache/` (cached by content hash), then runs `java -jar` from the minimal runtime. Subsequent runs skip extraction entirely.
+
+## Installation
+
+### From source
+
+```sh
+git clone https://github.com/avelino/clj-pack.git
+cd clj-pack
+cargo install --path .
+```
+
+## Usage
+
+```sh
+# Build with specific Java version
+clj-pack build --input . --output ./dist/app --java-version 21
+
+# Cross-platform target
+clj-pack build --input . --output ./dist/app --target linux-x64
+
+# Pass JVM arguments
+clj-pack build --input . --output ./dist/app --jvm-args "-Xmx512m"
+
+# Show cache info
+clj-pack info
+
+# Clean cache
+clj-pack clean
+```
+
+### Supported platforms
+
+| Target          | Status    |
+| --------------- | --------- |
+| `linux-x64`     | Supported |
+| `linux-aarch64` | Supported |
+| `macos-x64`     | Supported |
+| `macos-aarch64` | Supported |
+
+### Supported build systems
+
+| System                 | Detection                     |
+| ---------------------- | ----------------------------- |
+| deps.edn (tools.build) | `deps.edn` in project root    |
+| Leiningen              | `project.clj` in project root |
+
+## Contributing
+
+Contributions are welcome. Here's how to get started:
+
+1. Fork the repository
+2. Create a branch for your change
+3. Make your changes with tests if applicable
+4. Open a pull request
+
+### Development
+
+```sh
+# Build
+cargo build
+
+# Run against example project
+cargo run -- build --input ./example --output ./dist/app
+
+# Run the generated binary
+./dist/app
+```
+
+### Project structure
+
+```
+src/
+├── main.rs        # Entry point, orchestration
+├── cli.rs         # CLI definition (clap)
+├── config.rs      # BuildConfig, Target, BuildSystem
+├── detect.rs      # Build system detection
+├── build.rs       # Uberjar compilation
+├── jlink.rs       # jdeps + jlink (minimal runtime)
+├── error.rs       # Error types
+├── jvm/
+│   ├── mod.rs       # JDK download orchestration
+│   ├── adoptium.rs  # Adoptium API client
+│   ├── download.rs  # Download + SHA256 verification
+│   └── cache.rs     # Local JDK cache
+└── pack/
+    ├── mod.rs       # Binary creation
+    ├── stub.rs      # Shell launcher generation
+    └── archive.rs   # tar.gz payload creation
+```
+
+### Ideas for contribution
+
+- Windows support
+- GraalVM native-image as alternative backend
+- Custom `jlink` module list override
+- Compression options (zstd, xz)
+- CI/CD integration examples
+- Homebrew formula
+
+## License
+
+MIT

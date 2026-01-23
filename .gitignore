@@ -1,0 +1,25 @@
+# Rust
+/target
+debug/
+**/*.rs.bk
+
+# Build output
+/dist
+
+# Example build artifacts
+/example/target
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# llm
+CLAUDE.md
+AGENTS.md
