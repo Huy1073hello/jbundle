@@ -24,3 +24,45 @@ exit 0
 "#
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn stub_starts_with_shebang() {
+        let stub = generate("abc123", 1024, &[]);
+        assert!(stub.starts_with("#!/bin/sh\n"));
+    }
+
+    #[test]
+    fn stub_contains_payload_hash() {
+        let stub = generate("deadbeef12345678", 2048, &[]);
+        assert!(stub.contains("CACHE_ID=\"deadbeef12345678\""));
+    }
+
+    #[test]
+    fn stub_contains_payload_size() {
+        let stub = generate("abc", 999999, &[]);
+        assert!(stub.contains("PAYLOAD_SIZE=999999"));
+    }
+
+    #[test]
+    fn stub_without_jvm_args() {
+        let stub = generate("abc", 100, &[]);
+        assert!(stub.contains("exec \"$CACHE_DIR/runtime/bin/java\" -jar"));
+    }
+
+    #[test]
+    fn stub_with_jvm_args() {
+        let args = vec!["-Xmx512m".to_string(), "-Dapp.env=prod".to_string()];
+        let stub = generate("abc", 100, &args);
+        assert!(stub.contains("exec \"$CACHE_DIR/runtime/bin/java\" -Xmx512m -Dapp.env=prod -jar"));
+    }
+
+    #[test]
+    fn stub_ends_with_payload_marker() {
+        let stub = generate("abc", 100, &[]);
+        assert!(stub.ends_with("# --- PAYLOAD BELOW ---\n"));
+    }
+}

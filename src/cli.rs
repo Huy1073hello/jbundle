@@ -3,7 +3,11 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "clj-pack", version, about = "Package Clojure apps into self-contained binaries")]
+#[command(
+    name = "clj-pack",
+    version,
+    about = "Package Clojure apps into self-contained binaries"
+)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,

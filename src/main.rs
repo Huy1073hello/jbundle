@@ -11,17 +11,38 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use indicatif::HumanBytes;
+use indicatif::{HumanBytes, MultiProgress, ProgressBar, ProgressStyle};
 
 use cli::{Cli, Command};
 use config::{BuildConfig, Target};
+
+fn spinner(mp: &MultiProgress, msg: &str) -> ProgressBar {
+    let sp = mp.add(ProgressBar::new_spinner());
+    sp.set_style(
+        ProgressStyle::default_spinner()
+            .template("  {spinner:.cyan} {msg}")
+            .expect("invalid spinner template"),
+    );
+    sp.set_message(msg.to_string());
+    sp.enable_steady_tick(std::time::Duration::from_millis(80));
+    sp
+}
+
+fn finish_spinner(sp: &ProgressBar, msg: &str) {
+    sp.set_style(
+        ProgressStyle::default_spinner()
+            .template("  {msg}")
+            .expect("invalid spinner template"),
+    );
+    sp.finish_with_message(format!("\x1b[32m✓\x1b[0m {msg}"));
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive("clj_pack=info".parse().unwrap()),
+                .add_directive("clj_pack=warn".parse().unwrap()),
         )
         .with_target(false)
         .without_time()
@@ -38,14 +59,14 @@ async fn main() -> Result<()> {
             jvm_args,
         } => {
             let target = match target {
-                Some(t) => Target::from_str(&t)
-                    .context(format!("invalid target: {t}. Use: linux-x64, linux-aarch64, macos-x64, macos-aarch64"))?,
+                Some(t) => Target::from_str(&t).context(format!(
+                    "invalid target: {t}. Use: linux-x64, linux-aarch64, macos-x64, macos-aarch64"
+                ))?,
                 None => Target::current(),
             };
 
             let config = BuildConfig {
-                input: std::fs::canonicalize(&input)
-                    .unwrap_or_else(|_| PathBuf::from(&input)),
+                input: std::fs::canonicalize(&input).unwrap_or_else(|_| PathBuf::from(&input)),
                 output: PathBuf::from(&output),
                 java_version,
                 target,
@@ -66,40 +87,65 @@ async fn main() -> Result<()> {
 }
 
 async fn run_build(config: BuildConfig) -> Result<()> {
-    let jar_path = if config.input.extension().map_or(false, |e| e == "jar") {
-        tracing::info!("using pre-built JAR: {}", config.input.display());
-        config.input.clone()
+    let mp = MultiProgress::new();
+    eprintln!();
+
+    // Step 1: Build uberjar
+    let jar_path = if config.input.extension().is_some_and(|e| e == "jar") {
+        let sp = spinner(&mp, "Using pre-built JAR");
+        let jar = config.input.clone();
+        finish_spinner(&sp, &format!("JAR: {}", jar.display()));
+        jar
     } else {
-        tracing::info!("detecting build system in {}", config.input.display());
+        let sp = spinner(&mp, "Building uberjar...");
         let system = detect::detect_build_system(&config.input)?;
-        tracing::info!("building uberjar with {:?}", system);
-        build::build_uberjar(&config.input, system)?
+        let jar = build::build_uberjar(&config.input, system)?;
+        finish_spinner(
+            &sp,
+            &format!(
+                "Uberjar: {}",
+                jar.file_name().unwrap_or_default().to_string_lossy()
+            ),
+        );
+        jar
     };
 
-    tracing::info!("uberjar: {}", jar_path.display());
+    // Step 2: Ensure JDK
+    let sp = spinner(&mp, &format!("Ensuring JDK {}...", config.java_version));
+    let jdk_path = jvm::ensure_jdk(config.java_version, &config.target, &mp).await?;
+    finish_spinner(&sp, &format!("JDK {} ready", config.java_version));
 
-    let jdk_path = jvm::ensure_jdk(config.java_version, &config.target).await?;
-    tracing::info!("JDK path: {}", jdk_path.display());
-
+    // Step 3: Detect modules
+    let sp = spinner(&mp, "Detecting Java modules...");
     let temp_dir = tempfile::tempdir()?;
     let modules = jlink::detect_modules(&jdk_path, &jar_path)?;
-    tracing::info!("modules: {modules}");
+    let module_count = modules.split(',').count();
+    finish_spinner(&sp, &format!("{module_count} modules detected"));
 
+    // Step 4: Create minimal runtime
+    let sp = spinner(&mp, "Creating minimal JVM runtime...");
     let runtime_path = jlink::create_runtime(&jdk_path, &modules, temp_dir.path())?;
-    tracing::info!("runtime created at {}", runtime_path.display());
+    finish_spinner(&sp, "Runtime created (jlink)");
 
+    // Step 5: Pack binary
+    let sp = spinner(&mp, "Packing binary...");
     pack::create_binary(&runtime_path, &jar_path, &config.output, &config.jvm_args)?;
-
     let size = std::fs::metadata(&config.output)?.len();
-    eprintln!("\n  Binary: {}", config.output.display());
-    eprintln!("  Size:   {}", HumanBytes(size));
-    eprintln!("  Ready to run!\n");
+    finish_spinner(
+        &sp,
+        &format!("Packed: {} ({})", config.output.display(), HumanBytes(size)),
+    );
+
+    eprintln!(
+        "\n  \x1b[1;32m✓\x1b[0m Binary ready: {}\n",
+        config.output.display()
+    );
 
     Ok(())
 }
 
 fn run_clean() -> Result<()> {
-    let cache_dir = BuildConfig::cache_dir();
+    let cache_dir = BuildConfig::cache_dir()?;
     if cache_dir.exists() {
         let size = dir_size(&cache_dir);
         std::fs::remove_dir_all(&cache_dir)?;
@@ -111,7 +157,7 @@ fn run_clean() -> Result<()> {
 }
 
 fn run_info() -> Result<()> {
-    let cache_dir = BuildConfig::cache_dir();
+    let cache_dir = BuildConfig::cache_dir()?;
     eprintln!("Cache directory: {}", cache_dir.display());
 
     if cache_dir.exists() {

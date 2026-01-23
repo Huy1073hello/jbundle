@@ -9,12 +9,17 @@ pub fn detect_modules(jdk_path: &Path, jar_path: &Path) -> Result<String, PackEr
 
     tracing::info!("detecting required modules with jdeps");
 
+    let jar_str = jar_path
+        .to_str()
+        .ok_or_else(|| PackError::JdepsFailed("JAR path contains invalid UTF-8".into()))?;
+
     let output = Command::new(&jdeps)
         .args([
             "--print-module-deps",
             "--ignore-missing-deps",
-            "--multi-release", "base",
-            jar_path.to_str().unwrap(),
+            "--multi-release",
+            "base",
+            jar_str,
         ])
         .output()
         .map_err(|e| PackError::JdepsFailed(format!("failed to run jdeps: {e}")))?;
@@ -34,7 +39,11 @@ pub fn detect_modules(jdk_path: &Path, jar_path: &Path) -> Result<String, PackEr
     Ok(modules)
 }
 
-pub fn create_runtime(jdk_path: &Path, modules: &str, output_dir: &Path) -> Result<PathBuf, PackError> {
+pub fn create_runtime(
+    jdk_path: &Path,
+    modules: &str,
+    output_dir: &Path,
+) -> Result<PathBuf, PackError> {
     let jlink_bin = jdk_bin(jdk_path, "jlink");
     let runtime_path = output_dir.join("runtime");
 
@@ -44,14 +53,20 @@ pub fn create_runtime(jdk_path: &Path, modules: &str, output_dir: &Path) -> Resu
 
     tracing::info!("creating minimal JVM runtime with jlink");
 
+    let runtime_str = runtime_path
+        .to_str()
+        .ok_or_else(|| PackError::JlinkFailed("runtime path contains invalid UTF-8".into()))?;
+
     let output = Command::new(&jlink_bin)
         .args([
-            "--add-modules", modules,
+            "--add-modules",
+            modules,
             "--strip-debug",
             "--no-man-pages",
             "--no-header-files",
             "--compress=zip-6",
-            "--output", runtime_path.to_str().unwrap(),
+            "--output",
+            runtime_str,
         ])
         .output()
         .map_err(|e| PackError::JlinkFailed(format!("failed to run jlink: {e}")))?;
