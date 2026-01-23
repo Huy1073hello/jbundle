@@ -12,6 +12,15 @@ CACHE_ID="{payload_hash}"
 CACHE_DIR="${{HOME}}/.clj-pack/cache/${{CACHE_ID}}"
 PAYLOAD_SIZE={payload_size}
 
+cat >&2 <<'BANNER'
+       _  _                      _
+   ___| |(_)      _ __  __ _ ___| | __
+  / __| || |_____| '_ \/ _` / __| |/ /
+ | (__| || |_____| |_) | (_| \__ \   <
+  \___|_|/ |     | .__/ \__,_|___/_|\_\
+       |__/      |_|
+BANNER
+
 if [ ! -d "$CACHE_DIR/runtime" ]; then
     mkdir -p "$CACHE_DIR"
     echo "Extracting runtime (first run)..." >&2
@@ -64,5 +73,12 @@ mod tests {
     fn stub_ends_with_payload_marker() {
         let stub = generate("abc", 100, &[]);
         assert!(stub.ends_with("# --- PAYLOAD BELOW ---\n"));
+    }
+
+    #[test]
+    fn stub_contains_banner() {
+        let stub = generate("abc", 100, &[]);
+        assert!(stub.contains("BANNER"));
+        assert!(stub.contains("___| |(_)"));
     }
 }
